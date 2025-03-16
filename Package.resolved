@@ -1,0 +1,24 @@
+{
+  "originHash" : "e66632e44bb2992fd681aa71ad5bfa677733994284eb361bd90066a613870908",
+  "pins" : [
+    {
+      "identity" : "mixpanel-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/mixpanel/mixpanel-swift.git",
+      "state" : {
+        "revision" : "48d6668ceaaefc338f94e2b084c3cf77b90182f8",
+        "version" : "4.3.0"
+      }
+    },
+    {
+      "identity" : "taanalytics",
+      "kind" : "remoteSourceControl",
+      "location" : "git@github.com:TechArtists/TAAnalytics.git",
+      "state" : {
+        "revision" : "a344af269d4b111fabd4d0de8914965458ee4df4",
+        "version" : "1.0.2"
+      }
+    }
+  ],
+  "version" : 3
+}
