@@ -27,9 +27,9 @@ import OSLog
 import TAAnalytics
 import Mixpanel
 
-public class MixPanelConsumer: AnalyticsConsumer {
+public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
    
-    public typealias T = MixPanelConsumer
+    public typealias T = MixPanelAnalyticsConsumer
     
     public var wrappedValue: Self {
         self
@@ -107,7 +107,7 @@ public class MixPanelConsumer: AnalyticsConsumer {
     }
 }
 
-extension MixPanelConsumer: AnalyticsConsumerWithWriteOnlyUserID {
+extension MixPanelAnalyticsConsumer: AnalyticsConsumerWithWriteOnlyUserID {
     
     public func set(userID: String?) {
         guard let userID = userID else { return }
