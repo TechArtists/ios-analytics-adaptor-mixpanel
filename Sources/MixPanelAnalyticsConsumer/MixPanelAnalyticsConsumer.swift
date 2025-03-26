@@ -28,11 +28,9 @@ import TAAnalytics
 import Mixpanel
 
 public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
-   
-    public typealias T = MixPanelAnalyticsConsumer
     
-    public var wrappedValue: Self {
-        self
+    public var wrappedValue: MixpanelInstance {
+        Mixpanel.mainInstance()
     }
     
     let mixPanelInstance: MixpanelInstance = Mixpanel.mainInstance()
