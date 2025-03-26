@@ -28,7 +28,7 @@ import PackageDescription
 
 let package = Package(
     name: "MixPanelAnalyticsConsumer",
-    platforms: [.iOS(.v13), .macOS(.v10_13)],
+    platforms: [.iOS(.v15), .macOS(.v10_13)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
@@ -40,7 +40,7 @@ let package = Package(
             url: "https://github.com/mixpanel/mixpanel-swift.git",
             .upToNextMajor(from: "4.0.0")
         ),
-        .package(url: "git@github.com:TechArtists/TAAnalytics.git", from: "1.0.0")
+        .package(url: "git@github.com:TechArtists/TAAnalytics.git", from: "0.9.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.

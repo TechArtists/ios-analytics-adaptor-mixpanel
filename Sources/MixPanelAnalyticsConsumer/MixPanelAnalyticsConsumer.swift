@@ -37,73 +37,91 @@ public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
     
     let mixPanelInstance: MixpanelInstance = Mixpanel.mainInstance()
     
-    let mixPanelToken: String
+    let sdkKey: String
 
-    init(mixpanelToken: String) {
-        self.mixPanelToken = mixpanelToken
+    init(sdkKey: String) {
+        self.sdkKey = sdkKey
     }
     
     public func startFor(installType: TAAnalyticsConfig.InstallType, userDefaults: UserDefaults, TAAnalytics: TAAnalytics) async throws {
-        Mixpanel.initialize(token: mixPanelToken, trackAutomaticEvents: false)
+        Mixpanel.initialize(token: sdkKey, trackAutomaticEvents: false)
     }
 
-    public func track(trimmedEvent: TrimmedEvent, params: [String: AnalyticsBaseParameterValue]?) {
-        let event = trimmedEvent.event
+    public func track(trimmedEvent: EventAnalyticsModelTrimmed, params: [String: any AnalyticsBaseParameterValue]?) {
         
-        let validParams = validEventParams(forEvent: event, params: params)
+        let validParams = validEventParams(forEvent: trimmedEvent, params: params)
         
-        mixPanelInstance.track(event: event.rawValue, properties: validParams)
+        mixPanelInstance.track(event: trimmedEvent.rawValue, properties: validParams)
     }
     
-    private func validEventParams(forEvent event: AnalyticsEvent, params: [String: AnalyticsBaseParameterValue]?) -> [String: MixpanelType]? {
+    private func validEventParams(forEvent event: EventAnalyticsModelTrimmed, params: [String: any AnalyticsBaseParameterValue]?) -> [String: MixpanelType]? {
         guard let params = params else { return nil }
         
         var newParams = [String: MixpanelType]()
         
         for (key, value) in params {
-            if key.count > 40 || ((value as? String)?.count ?? 0) > 100 {
-                let newKey = String(key.prefix(40))
-                var newValue = value
-                var newValueString = ""
-                if let value = value as? String {
-                    newValue = String(value.prefix(100))
-                    newValueString = String(value.prefix(100))
-                }
-                
-                newParams[newKey] = convert(parameter: newValue)
-                
+            var trimmedKey = key
+            if trimmedKey.count > 40 {
+                trimmedKey = String(trimmedKey.prefix(40))
                 os_log(
-                    "Will trim parameters for event '%{public}@', key: '%{public}@', value: '%@'",
+                    "Trimmed key for event '%{public}@' from '%{public}@' to '%{public}@'",
                     log: TAAnalytics.logger,
                     type: .error,
                     event.rawValue,
-                    newKey,
-                    newValueString
+                    key,
+                    trimmedKey
                 )
-            } else {
-                newParams[key] = convert(parameter: value)
             }
+
+            var convertedValue: MixpanelType
+
+            if let str = value as? String {
+                let trimmedStr = str.count > 100 ? String(str.prefix(100)) : str
+                if trimmedStr != str {
+                    os_log(
+                        "Trimmed value for key '%{public}@' in event '%{public}@'",
+                        log: TAAnalytics.logger,
+                        type: .error,
+                        trimmedKey,
+                        event.rawValue
+                    )
+                }
+                convertedValue = trimmedStr
+            } else if let mixpanelValue = value as? MixpanelType {
+                convertedValue = mixpanelValue
+            } else {
+                os_log(
+                    "Unsupported parameter value for key '%{public}@' in event '%{public}@'. Skipping.",
+                    log: TAAnalytics.logger,
+                    type: .error,
+                    trimmedKey
+                )
+                continue
+            }
+
+            newParams[trimmedKey] = convertedValue
         }
         return newParams
     }
     
-    private func convert(parameter: AnalyticsBaseParameterValue) -> MixpanelType {
+    private func convert(parameter: any AnalyticsBaseParameterValue) -> MixpanelType {
         guard let parameter = parameter as? MixpanelType else {
             fatalError("Unsupported base parameter type \(parameter)")
         }
         return parameter
     }
 
-    public func set(trimmedUserProperty: TrimmedUserProperty, to value: String?) {
-        let userProperty = trimmedUserProperty.userProperty
+    public func set(trimmedUserProperty: UserPropertyAnalyticsModelTrimmed, to value: String?) {
+        guard let value = value else { return }
+        mixPanelInstance.people.set(property: trimmedUserProperty.rawValue, to: value)
     }
 
-    public func trim(event: AnalyticsEvent) -> TrimmedEvent {
-        TrimmedEvent(event.rawValue.ob_trim(type: "event", toLength: 40))
+    public func trim(event: EventAnalyticsModel) -> EventAnalyticsModelTrimmed {
+        EventAnalyticsModelTrimmed(event.rawValue.ta_trim(toLength: 40, debugType: "event"))
     }
-
-    public func trim(userProperty: AnalyticsUserProperty) -> TrimmedUserProperty {
-        TrimmedUserProperty(userProperty.rawValue.ob_trim(type: "user property", toLength: 24))
+    
+    public func trim(userProperty: UserPropertyAnalyticsModel) -> UserPropertyAnalyticsModelTrimmed {
+        UserPropertyAnalyticsModelTrimmed(userProperty.rawValue.ta_trim(toLength: 24, debugType: "user property"))
     }
 }
 
