@@ -28,20 +28,23 @@ import TAAnalytics
 import Mixpanel
 
 public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
-    
-    public var wrappedValue: MixpanelInstance {
-        Mixpanel.mainInstance()
-    }
-    
+
     let mixPanelInstance: MixpanelInstance = Mixpanel.mainInstance()
     
-    let sdkKey: String
-
-    init(sdkKey: String) {
+    private let enabledInstallTypes: [TAAnalyticsConfig.InstallType]
+    private let sdkKey: String
+    
+    /// - Parameter enabledInstallTypes: By default, Firebase is only enabled for app store builds
+    public init(enabledInstallTypes: [TAAnalyticsConfig.InstallType] = TAAnalyticsConfig.InstallType.allCases, sdkKey: String) {
+        self.enabledInstallTypes = enabledInstallTypes
         self.sdkKey = sdkKey
     }
     
     public func startFor(installType: TAAnalyticsConfig.InstallType, userDefaults: UserDefaults, TAAnalytics: TAAnalytics) async throws {
+        guard self.enabledInstallTypes.contains(installType) else {
+            throw InstallTypeError.invalidInstallType
+        }
+        
         Mixpanel.initialize(token: sdkKey, trackAutomaticEvents: false)
     }
 
@@ -108,6 +111,11 @@ public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
         }
         return parameter
     }
+    
+    public var wrappedValue: MixpanelInstance {
+        Mixpanel.mainInstance()
+    }
+    
 
     public func set(trimmedUserProperty: UserPropertyAnalyticsModelTrimmed, to value: String?) {
         guard let value = value else { return }
