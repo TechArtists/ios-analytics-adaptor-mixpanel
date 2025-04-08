@@ -1,4 +1,4 @@
-//  TAAppsFlyerConsumer.swift
+//  TAAppsFlyerAdaptor.swift
 //  Created by Adi on 10/24/22.
 //
 //  Copyright (c) 2022 TA SRL (http://TA.com/)
@@ -27,7 +27,7 @@ import OSLog
 import TAAnalytics
 import Mixpanel
 
-public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
+public class MixPanelAnalyticsAdaptor: AnalyticsAdaptor {
 
     let mixPanelInstance: MixpanelInstance = Mixpanel.mainInstance()
     
@@ -62,16 +62,9 @@ public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
         
         for (key, value) in params {
             var trimmedKey = key
-            if trimmedKey.count > 40 {
-                trimmedKey = String(trimmedKey.prefix(40))
-                os_log(
-                    "Trimmed key for event '%{public}@' from '%{public}@' to '%{public}@'",
-                    log: TAAnalytics.logger,
-                    type: .error,
-                    event.rawValue,
-                    key,
-                    trimmedKey
-                )
+            if trimmedKey.count > 255 {
+                trimmedKey = String(trimmedKey.prefix(255))
+                TAAnalyticsLogger.log("Trimmed key for event \(event.rawValue) from \(key) to \(trimmedKey)", level: .error)
             }
 
             var convertedValue: MixpanelType
@@ -79,23 +72,18 @@ public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
             if let str = value as? String {
                 let trimmedStr = str.count > 100 ? String(str.prefix(100)) : str
                 if trimmedStr != str {
-                    os_log(
-                        "Trimmed value for key '%{public}@' in event '%{public}@'",
-                        log: TAAnalytics.logger,
-                        type: .error,
-                        trimmedKey,
-                        event.rawValue
+                    TAAnalyticsLogger.log(
+                        "Trimmed value for key '\(trimmedKey)' in event '\(event.rawValue)'",
+                        level: .error
                     )
                 }
                 convertedValue = trimmedStr
             } else if let mixpanelValue = value as? MixpanelType {
                 convertedValue = mixpanelValue
             } else {
-                os_log(
-                    "Unsupported parameter value for key '%{public}@' in event '%{public}@'. Skipping.",
-                    log: TAAnalytics.logger,
-                    type: .error,
-                    trimmedKey
+                TAAnalyticsLogger.log(
+                    "Unsupported parameter value for key '\(trimmedKey)' in event '\(event.rawValue)'. Skipping.",
+                    level: .error
                 )
                 continue
             }
@@ -105,17 +93,9 @@ public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
         return newParams
     }
     
-    private func convert(parameter: any AnalyticsBaseParameterValue) -> MixpanelType {
-        guard let parameter = parameter as? MixpanelType else {
-            fatalError("Unsupported base parameter type \(parameter)")
-        }
-        return parameter
-    }
-    
     public var wrappedValue: MixpanelInstance {
         Mixpanel.mainInstance()
     }
-    
 
     public func set(trimmedUserProperty: UserPropertyAnalyticsModelTrimmed, to value: String?) {
         guard let value = value else { return }
@@ -131,7 +111,7 @@ public class MixPanelAnalyticsConsumer: AnalyticsConsumer {
     }
 }
 
-extension MixPanelAnalyticsConsumer: AnalyticsConsumerWithWriteOnlyUserID {
+extension MixPanelAnalyticsAdaptor: AnalyticsAdaptorWithWriteOnlyUserID {
     
     public func set(userID: String?) {
         guard let userID = userID else { return }
