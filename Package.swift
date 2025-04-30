@@ -36,10 +36,7 @@ let package = Package(
             targets: ["MixPanelAnalyticsAdaptor"]),
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/mixpanel/mixpanel-swift.git",
-            .upToNextMajor(from: "4.0.0")
-        ),
+        .package(url: "https://github.com/mixpanel/mixpanel-swift.git", .upToNextMajor(from: "4.0.0")),
         .package(url: "https://github.com/TechArtists/ios-analytics.git", from: "0.9.6")
     ],
     targets: [
@@ -49,7 +46,7 @@ let package = Package(
             name: "MixPanelAnalyticsAdaptor",
             dependencies: [
                 .product(name: "Mixpanel", package: "mixpanel-swift"),
-                .product(name:"TAAnalytics", package:"ios-analytics")
+                .product(name: "TAAnalytics", package:"ios-analytics")
             ]
         ),
         .testTarget(
