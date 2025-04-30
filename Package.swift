@@ -40,7 +40,7 @@ let package = Package(
             url: "https://github.com/mixpanel/mixpanel-swift.git",
             .upToNextMajor(from: "4.0.0")
         ),
-        .package(url: "git@github.com:TechArtists/TAAnalytics.git", from: "0.9.0")
+        .package(url: "https://github.com/TechArtists/ios-analytics.git", from: "0.9.6")
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -49,7 +49,7 @@ let package = Package(
             name: "MixPanelAnalyticsAdaptor",
             dependencies: [
                 .product(name: "Mixpanel", package: "mixpanel-swift"),
-                .product(name:"TAAnalytics", package:"TAAnalytics")
+                .product(name:"TAAnalytics", package:"ios-analytics")
             ]
         ),
         .testTarget(
