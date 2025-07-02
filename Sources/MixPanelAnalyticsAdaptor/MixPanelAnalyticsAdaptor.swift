@@ -28,13 +28,13 @@ import TAAnalytics
 import Mixpanel
 
 public class MixPanelAnalyticsAdaptor: AnalyticsAdaptor {
-
-    let mixPanelInstance: MixpanelInstance = Mixpanel.mainInstance()
+    public typealias T = MixpanelInstance
+    
+    private var mixPanelInstance: MixpanelInstance?
     
     private let enabledInstallTypes: [TAAnalyticsConfig.InstallType]
     private let sdkKey: String
     
-    /// - Parameter enabledInstallTypes: By default, Firebase is only enabled for app store builds
     public init(enabledInstallTypes: [TAAnalyticsConfig.InstallType] = TAAnalyticsConfig.InstallType.allCases, sdkKey: String) {
         self.enabledInstallTypes = enabledInstallTypes
         self.sdkKey = sdkKey
@@ -46,13 +46,13 @@ public class MixPanelAnalyticsAdaptor: AnalyticsAdaptor {
         }
         
         Mixpanel.initialize(token: sdkKey, trackAutomaticEvents: false)
+        // Set the instance AFTER initialization
+        mixPanelInstance = Mixpanel.mainInstance()
     }
 
     public func track(trimmedEvent: EventAnalyticsModelTrimmed, params: [String: any AnalyticsBaseParameterValue]?) {
-        
         let validParams = validEventParams(forEvent: trimmedEvent, params: params)
-        
-        mixPanelInstance.track(event: trimmedEvent.rawValue, properties: validParams)
+        mixPanelInstance?.track(event: trimmedEvent.rawValue, properties: validParams)
     }
     
     private func validEventParams(forEvent event: EventAnalyticsModelTrimmed, params: [String: any AnalyticsBaseParameterValue]?) -> [String: MixpanelType]? {
@@ -94,12 +94,13 @@ public class MixPanelAnalyticsAdaptor: AnalyticsAdaptor {
     }
     
     public var wrappedValue: MixpanelInstance {
-        Mixpanel.mainInstance()
+        // Return the stored instance, or fallback to mainInstance() if available
+        return mixPanelInstance ?? Mixpanel.mainInstance()
     }
 
     public func set(trimmedUserProperty: UserPropertyAnalyticsModelTrimmed, to value: String?) {
         guard let value = value else { return }
-        mixPanelInstance.people.set(property: trimmedUserProperty.rawValue, to: value)
+        mixPanelInstance?.people.set(property: trimmedUserProperty.rawValue, to: value)
     }
 
     public func trim(event: EventAnalyticsModel) -> EventAnalyticsModelTrimmed {
@@ -112,9 +113,8 @@ public class MixPanelAnalyticsAdaptor: AnalyticsAdaptor {
 }
 
 extension MixPanelAnalyticsAdaptor: AnalyticsAdaptorWithWriteOnlyUserID {
-    
     public func set(userID: String?) {
         guard let userID = userID else { return }
-        Mixpanel.mainInstance().identify(distinctId: userID)
+        mixPanelInstance?.identify(distinctId: userID)
     }
 }
