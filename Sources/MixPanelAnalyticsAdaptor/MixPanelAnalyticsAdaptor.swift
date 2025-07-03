@@ -40,14 +40,17 @@ public class MixPanelAnalyticsAdaptor: AnalyticsAdaptor {
         self.sdkKey = sdkKey
     }
     
-    public func startFor(installType: TAAnalyticsConfig.InstallType, userDefaults: UserDefaults, TAAnalytics: TAAnalytics) async throws {
+    public func startFor(installType: TAAnalyticsConfig.InstallType, userDefaults: UserDefaults, taAnalytics: TAAnalytics) async throws {
         guard self.enabledInstallTypes.contains(installType) else {
             throw InstallTypeError.invalidInstallType
         }
         
-        Mixpanel.initialize(token: sdkKey, trackAutomaticEvents: false)
         // Set the instance AFTER initialization
-        mixPanelInstance = Mixpanel.mainInstance()
+        mixPanelInstance = Mixpanel.initialize(token: sdkKey, trackAutomaticEvents: false)
+        
+        if let flushInterval = taAnalytics.config.flushIntervalForAdaptors {
+            mixPanelInstance?.flushInterval = flushInterval
+        }
     }
 
     public func track(trimmedEvent: EventAnalyticsModelTrimmed, params: [String: any AnalyticsBaseParameterValue]?) {
